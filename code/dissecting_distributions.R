@@ -86,7 +86,7 @@ autoplot(run, ts.geom = 'bar', fill = 'grey') +
   ylab('sockeye') +
   ylim(0, 200000)
 
-ggplot(weir_data, aes(day_of_year, run)) + geom_line() + 
+ggplot(chig_data, aes(day_of_year, run)) + geom_line() + 
   ylim(0, 200000) +
   facet_wrap(~year)
 

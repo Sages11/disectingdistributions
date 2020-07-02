@@ -3,18 +3,21 @@
 # sarah.power@alaska.gov
 # 8/15/2018
 
-# load ----
-library(fpp2)
-library(RDS)
-library(tidyverse)
-library(mixdist)
-library(lubridate)
-library(grid)
-library(data.table)
-library(lubridate)
-library(gridExtra)
-library(cowplot)
-library(zoo) # to convert numeric date back to a number can conflict with lubridate.
+
+# libraries ----
+
+if(!require("fpp2"))   install.packages("fpp2") 
+if(!require("RDS"))   install.packages("RDS") 
+if(!require("tidyverse"))   install.packages("tidyverse") # dplyr, ggplot, etc.
+if(!require("mixdist"))   install.packages("mixdist") 
+if(!require("lubridate"))   install.packages("lubridate") 
+if(!require("grid"))   install.packages("grid") 
+if(!require("data.table"))   install.packages("data.table") 
+if(!require("lubridate"))   install.packages("lubridate") 
+if(!require("gridExtra"))   install.packages("gridExtra") 
+if(!require("cowplot"))   install.packages("cowplot") 
+if(!require("zoo"))   install.packages("zoo")  # to convert numeric date back to a number can conflict with lubridate.
+
 citation("mixdist")
 #library(here)
 
@@ -41,31 +44,34 @@ theme_sleek <- function(base_size = 12, base_family = "Times") {
 #theme_set(theme_sleek())
 
 # functions ----
+
+
+# Create a data frame whose first column are the dates in numeric format
+# and whose second column are the frequencies. 
+# This is required for fitting the mixture. See mixdata {mixdist}
 data_prep <- function(df, year_wanted){
   df %>% 
     filter(year(date)==year_wanted) %>%
-    # Create a data frame whose first column are the dates in numeric format
-    # and whose second column are the frequencies. 
-    # This is required for fitting the mixture. See mixdata {mixdist}
     dplyr::select(day_of_year, run) -> df
 }
+
+# Create a data frame whose first column are the dates in numeric format
+# and whose second column are the frequencies. 
+# This is required for fitting the mixture. See mixdata {mixdist}
 data_prep_early <- function(df, year_wanted){
   df %>% 
     filter(year(date)==year_wanted) %>%
-    # Create a data frame whose first column are the dates in numeric format
-    # and whose second column are the frequencies. 
-    # This is required for fitting the mixture. See mixdata {mixdist}
     dplyr::select(day_of_year, run_early_gen) -> df
 }
 
+#Input data frame of runtiming and genetic testing
+#output graphs and tables comparing two methods for each year
 year_stats <- function (df, year_wanted){
   #df <- df_data
   #year_wanted <- 2006
   df %>%
     filter(year(date)==year_wanted)-> df
   #run_size <-sum(df$run)
-  #print("Run")
-  #print(run_size)
   df_fit <- data_prep(df, year_wanted)
   fit <- distribution_estimation_norms_SEQ(df_fit) 
   #dist_plot (fit, year_wanted)
@@ -79,12 +85,61 @@ year_stats <- function (df, year_wanted){
   
   #this first graph is not displayed, but can be used in years with genetics 
   # to find starting values for the fit for distribution_estimation_norms_SEQ(df_fit) 
+  
+  #Must use group_by(day_of_year) %>% to get correct calculations
+  
   df %>%
-    mutate(dist_percent = percent_dist(fit, df$day_of_year),
-           run_early_dis = dist_percent*run,
-           cum_run_dis = cumsum(run_early_dis),
-           cum_run_gen = cumsum(run_early_gen)) ->df
+    dplyr::group_by(day_of_year) %>% 
+    dplyr::mutate(dist_percent = percent_dist(fit,day_of_year),
+                  run_early_dis = dist_percent*run,
+                  run_early_dis_all = dist_percent*run_all,
+                  run_early_gen_all = prop_early_genetics*run_all) -> df
+
+  df %>%
+    dplyr::group_by(year) %>% 
+    dplyr::mutate(cum_run_dis = cumsum(replace_na(run_early_dis, 0)),
+                  cum_run_dis_all = cumsum(replace_na(run_early_dis_all, 0)),
+                  cum_run_gen = cumsum(replace_na(run_early_gen, 0)),
+                  cum_run_gen_all = cumsum(replace_na(run_early_gen_all, 0)),
+                  cum_run_all = cumsum(replace_na(run_all,0))) %>%
+    dplyr::ungroup(year) -> df #   %>% View(cum_run_gen) #
+ 
+  p_early_dis <- sum(df$run_early_dis)/sum(df$run)
+  p_early_gen <- sum(df$run_early_gen)/sum(df$run)
+  
   min(df$day_of_year, na.rm = TRUE)
+  
+  
+  
+  # this is for simultaneous graphing. 
+  
+  df_long <- df %>%
+    gather(model_type, proportions, dist_percent, prop_early_genetics)
+  length(df_long$proportions)
+
+  ks.test(df$dist_percent, df$prop_early_genetics)
+
+  #ecdf.ksCI(df$dist_percent)
+  
+  ggplot(df, aes(day_of_year, prop_early_genetics)) +
+    geom_point(size=2) + theme_light()
+  
+  ggplot(df, aes(day_of_year, dist_percent)) +
+    geom_point(size=2) + theme_light()
+  
+  log_curve <- ggplot(df_long, aes(x = day_of_year, y = proportions), color = model_type) +
+    geom_point(aes(pch = model_type)) + theme_light() +
+    theme(legend.justification = c(.5,0), legend.position = "bottom")
+  ggsave(filename = paste0("figures/log_curv", year_wanted, ".png", sep = ""), device = png(), width = 7, height = 9, units = "in", dpi = 300)
+  
+  
+  #df %>%
+  #  mutate(dist_percent = percent_dist(fit, df$day_of_year),
+  #         run_early_dis = dist_percent*run,
+  #         cum_run_dis = cumsum(run_early_dis),
+  #         cum_run_gen = cumsum(run_early_gen),
+  #         cum_run_all = cumsum(replace_na(run_all,0))) ->df #cum_run_all
+  #min(df$day_of_year, na.rm = TRUE)
   #print("Number of early run by runtiming distribution")
   #print(max(df$cum_run_dis))
   #print("Number of early run by genetics runtiming distribution")
@@ -92,23 +147,12 @@ year_stats <- function (df, year_wanted){
   #print("runtiming distribution/genetics runtiming distribution")
   #print(max(df$cum_run_dis)/max(df$cum_run_gen))
   #xaxis <- tickr(df, day_of_year, 5)
-  df %>%
-    dplyr::select(day_of_year, dist_percent, prop_early_genetics) %>% 
-    melt(id = "day_of_year") -> df2
-  ggplot(df2, aes(day_of_year, value, colour = variable))+
-    geom_line(size = 3)+
-    scale_colour_manual(name = "Modeled by",
-                        labels = c("Distribution only", "Genetics"), 
-                        values=c("green", "blue"))+
-    labs(y = "Proportion of run", x= "Day of the year")+
-    theme(legend.justification = c(1,1), legend.position = c(1,1))+
-    ggtitle(paste0(year_wanted, " Runtiming Assignment "))
-  
+
   df %>%
     dplyr::select(day_of_year, cum_run_dis, cum_run_gen) %>% 
-    melt(id = "day_of_year") -> df3
+    reshape2::melt(id = "day_of_year") -> df3
   #yaxis <- tickr(df3, value, 10000)  
-  ggplot(df3, aes(day_of_year, value, colour = variable))+
+  runCDF <- ggplot(df3, aes(day_of_year, value, colour = variable))+
     geom_line(size = 3)+
     scale_colour_manual(name = "Modeled by",
                         labels = c("Distribution only", "Genetics"), 
@@ -119,6 +163,8 @@ year_stats <- function (df, year_wanted){
     coord_cartesian(xlim = c(150, 220))+
     theme(legend.justification = c(1,0), legend.position = c(1,0))+
     ggtitle(paste0(year_wanted, " Early Run Estimation"))
+  my_list <- list(df = df,"logistic" = log_curve, "runCDF" = runCDF)
+  return(my_list) 
 }
 
 graph_year <- function(df){
