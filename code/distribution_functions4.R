@@ -58,6 +58,8 @@ data_prep <- function(df, year_wanted){
 # Create a data frame whose first column are the dates in numeric format
 # and whose second column are the frequencies. 
 # This is required for fitting the mixture. See mixdata {mixdist}
+#This using genetics methods to find the early run component. 
+#This was helpful when initially figuring out early. 
 data_prep_early <- function(df, year_wanted){
   df %>% 
     filter(year(date)==year_wanted) %>%
@@ -109,8 +111,6 @@ year_stats <- function (df, year_wanted){
   
   min(df$day_of_year, na.rm = TRUE)
   
-  
-  
   # this is for simultaneous graphing. 
   
   df_long <- df %>%
@@ -126,13 +126,14 @@ year_stats <- function (df, year_wanted){
   
   ggplot(df, aes(day_of_year, dist_percent)) +
     geom_point(size=2) + theme_light()
+  dev.off()
   
-  log_curve <- ggplot(df_long, aes(x = day_of_year, y = proportions), color = model_type) +
+  long_curve <- ggplot(df_long, aes(x = day_of_year, y = proportions), color = model_type) +
     geom_point(aes(pch = model_type)) + theme_light() +
     theme(legend.justification = c(.5,0), legend.position = "bottom")
-  ggsave(filename = paste0("figures/log_curv", year_wanted, ".png", sep = ""), device = png(), width = 7, height = 9, units = "in", dpi = 300)
+  ggsave(filename = paste0("figures/long_curv", year_wanted, ".png", sep = ""), device = png(), width = 7, height = 9, units = "in", dpi = 300)
   
-  
+  dev.off()
   #df %>%
   #  mutate(dist_percent = percent_dist(fit, df$day_of_year),
   #         run_early_dis = dist_percent*run,
@@ -147,22 +148,24 @@ year_stats <- function (df, year_wanted){
   #print("runtiming distribution/genetics runtiming distribution")
   #print(max(df$cum_run_dis)/max(df$cum_run_gen))
   #xaxis <- tickr(df, day_of_year, 5)
-
-  df %>%
-    dplyr::select(day_of_year, cum_run_dis, cum_run_gen) %>% 
-    reshape2::melt(id = "day_of_year") -> df3
-  #yaxis <- tickr(df3, value, 10000)  
-  runCDF <- ggplot(df3, aes(day_of_year, value, colour = variable))+
-    geom_line(size = 3)+
-    scale_colour_manual(name = "Modeled by",
-                        labels = c("Distribution only", "Genetics"), 
-                        values=c("green", "blue"))+
-    labs(y = "Cumulative run", x= "Day of the year")+
-    #scale_x_continuous(breaks = xaxis$breaks, labels = xaxis$labels)+
-    #scale_y_continuous(breaks = yaxis$breaks, labels = yaxis$labels)+
-    coord_cartesian(xlim = c(150, 220))+
-    theme(legend.justification = c(1,0), legend.position = c(1,0))+
-    ggtitle(paste0(year_wanted, " Early Run Estimation"))
+  
+  df_long_cum <- df %>%
+    gather(model_type, cumulative_run, cum_run_dis, cum_run_gen)
+  length(df_long_cum$cumulative_run)
+  
+  long_curve_cum <- ggplot(df_long_cum, aes(x = day_of_year, y = cumulative_run), shape = model_type) +
+    geom_point(aes(pch = model_type)) + 
+    ggtitle(label = paste0(year_wanted, " Early Run Estimation"), subtitle = year_wanted) +
+    theme_light(plot.subtitle = element_text(vjust = 0.5)) +# adjust subtitle
+    scale_shape_manual(name = "Modeled by",
+                        labels = c("Run Timing", "Genetics"), 
+                        values = c(19, 17)) +
+    theme(legend.justification = c(.5,0), legend.position = "bottom") +
+    labs(y = "Cumulative run", x= "Day of the year") +
+    coord_cartesian(xlim = c(150, 220))
+  long_curve_cum 
+  ggsave(filename = paste0("figures/long_curve_cum", year_wanted, ".png", sep = ""), device = png(), width = 7, height = 9, units = "in", dpi = 300)
+  
   my_list <- list(df = df,"logistic" = log_curve, "runCDF" = runCDF)
   return(my_list) 
 }
@@ -181,6 +184,9 @@ graph_year_early <- function(df){
     labs(title = "Early Run Daily weir passage", x = "date in number format", y = "Number of fish")
 }
 
+
+#This function looks at what genetics says the early run should look like. 
+#This might be helpful if someone is trying to figure out starting values for the run timing method. 
 early_look <- function(df, year_wanted){
   df <- data_prep_early(df, year_wanted)
   fit <- mix(as.mixdata(df), mixparam(mu=mean(df$day_of_year), sigma=sd(df$day_of_year)), dist="gamma", iterlim=5000)
