@@ -1,7 +1,7 @@
 # notes ----
 # dissecting distributions
 # sarah.power@alaska.gov
-# 6/13/2020
+# 7/7/2020
 
 # load ----
 

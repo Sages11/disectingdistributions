@@ -1,7 +1,7 @@
 # notes ----
 # functions for dissecting distributions
 # sarah.power@alaska.gov
-# 8/15/2018
+# 7/7/2020
 
 
 # libraries ----
