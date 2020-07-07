@@ -127,6 +127,7 @@ y17 <- year_stats(df_data, 2017)
 y18 <- year_stats(df_data, 2018)
 y19 <- year_stats(df_data, 2019)
 
+
 dev.off()
 dev.off()
 dev.off()

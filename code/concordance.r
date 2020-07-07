@@ -1,5 +1,6 @@
 # notes ----
-#Determining possible harvest allocation schemes which should help with run timing estimates of early run transitional timing.
+# Determining possible harvest allocation schemes which should help with 
+# run timing estimates of early run transitional timing.
 # sarah.power@alaska.gov
 # 10/29/2018
 
@@ -70,6 +71,54 @@ xyz2 <-harvest_data %>%
 harv <- harvest_data %>% 
   dplyr::select(date_weir, year, month_of_weir, area, chig_catch) %>% 
   tidyr::spread(area, chig_catch)
+
+harv2 <- harv %>% 
+  group_by(year, month_of_weir) %>%
+  summarise( Central= sum(Central, na.rm = TRUE),
+             Chignik= sum(Chignik, na.rm = TRUE),
+             Dolgoi = sum(Dolgoi, na.rm = TRUE ),
+             Eastern= sum(Eastern, na.rm = TRUE),
+             Igvak  = sum(Igvak, na.rm = TRUE),
+             Ikatan = sum(Ikatan, na.rm = TRUE),
+             Perryville= sum(Perryville, na.rm = TRUE),
+             SEDM   = sum(SEDM, na.rm = TRUE),
+             Shumagins = sum(Shumagins, na.rm = TRUE),
+             Unimak = sum(Unimak, na.rm = TRUE),
+             Western= sum(Western, na.rm = TRUE)
+             )
+
+harv3 <- harv %>% 
+  group_by(year) %>%
+  summarise( Central= sum(Central, na.rm = TRUE),
+             Chignik= sum(Chignik, na.rm = TRUE),
+             Dolgoi = sum(Dolgoi, na.rm = TRUE ),
+             Eastern= sum(Eastern, na.rm = TRUE),
+             Igvak  = sum(Igvak, na.rm = TRUE),
+             Ikatan = sum(Ikatan, na.rm = TRUE),
+             Perryville= sum(Perryville, na.rm = TRUE),
+             SEDM   = sum(SEDM, na.rm = TRUE),
+             Shumagins = sum(Shumagins, na.rm = TRUE),
+             Unimak = sum(Unimak, na.rm = TRUE),
+             Western= sum(Western, na.rm = TRUE)
+  )
+
+harv4 <- harv3 %>% 
+  group_by(year) %>%
+  mutate(yearly_harv = sum(Central,Chignik, Dolgoi, Eastern, Igvak, Ikatan, Perryville, SEDM, Shumagins, Unimak, Western, na.rm = TRUE),
+         Central= round(Central/yearly_harv*100),
+         Chignik= round(Chignik/yearly_harv*100),
+         Dolgoi = round(Dolgoi/yearly_harv*100),
+             Eastern= round(Eastern/yearly_harv*100),
+             Igvak  = round(Igvak/yearly_harv*100),
+             Ikatan = round(Ikatan/yearly_harv*100),
+             Perryville= round(Perryville/yearly_harv*100),
+             SEDM   = round(SEDM/yearly_harv*100),
+             Shumagins = round(Shumagins/yearly_harv*100),
+             Unimak = round(Unimak/yearly_harv*100),
+             Western= round(Western/yearly_harv*100))
+# We can see in 2015 there was quite a bit of Chignik attributed harvest caught in the SEDM & Western region, 
+# with relatively less caught in Chignik and Central.  
+  
 
 catch <-aggregate( chig_catch ~ date_weir, data=harvest_data, FUN=sum)
 
