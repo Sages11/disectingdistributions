@@ -90,12 +90,12 @@ year_stats <- function (df, year_wanted){
   
   #Must use group_by(day_of_year) %>% to get correct calculations
   
-  df %>%
+  df <- df %>%
     dplyr::group_by(day_of_year) %>% 
     dplyr::mutate(dist_percent = percent_dist(fit,day_of_year),
                   run_early_dis = dist_percent*run,
                   run_early_dis_all = dist_percent*run_all,
-                  run_early_gen_all = prop_early_genetics*run_all) -> df
+                  run_early_gen_all = prop_early_genetics*run_all)
 
   df %>%
     dplyr::group_by(year) %>% 
@@ -153,22 +153,33 @@ year_stats <- function (df, year_wanted){
     gather(model_type, cumulative_run, cum_run_dis, cum_run_gen)
   length(df_long_cum$cumulative_run)
   
-  long_curve_cum <- ggplot(df_long_cum, aes(x = day_of_year, y = cumulative_run), shape = model_type) +
+  jun1 <- as.integer(yday(as.Date(paste0(year_wanted, "-06-01"))))
+  jul1 <- as.integer(yday(as.Date(paste0(year_wanted, "-07-01"))))
+  aug1 <- as.integer(yday(as.Date(paste0(year_wanted, "-08-01"))))
+  d <- data.frame(day_of_year = c(jun1, jul1, aug1), 
+                  event = c("June 1", "July 1", "August 1"))
+
+  
+  long_curve_cum <- ggplot(df_long_cum, aes(x = day_of_year, y = cumulative_run), color = model_type) +
     geom_point(aes(pch = model_type)) + 
-    ggtitle(label = paste0(year_wanted, " Early Run Estimation"), subtitle = year_wanted) +
-    theme_light(plot.subtitle = element_text(vjust = 0.5)) +# adjust subtitle
+    ggtitle(label = paste0(year_wanted, " Early Run Estimation")) +
+    theme_light() +
+    geom_vline(data = d, mapping = aes(xintercept = day_of_year, linetype = "dotted"), show.legend = FALSE) +
+    geom_text(data=d, mapping=aes(x=day_of_year, y=0, label= event), size=4, angle=90, vjust= -0.4, hjust = -0.5) +
     scale_shape_manual(name = "Modeled by",
                         labels = c("Run Timing", "Genetics"), 
                         values = c(19, 17)) +
-    theme(legend.justification = c(.5,0), legend.position = "bottom") +
+    theme(plot.title = element_text(vjust = -8, hjust = 0.05), legend.justification = c(.5,0), legend.position = "bottom") +
     labs(y = "Cumulative run", x= "Day of the year") +
     coord_cartesian(xlim = c(150, 220))
   long_curve_cum 
+  dev.off()
   ggsave(filename = paste0("figures/long_curve_cum", year_wanted, ".png", sep = ""), device = png(), width = 7, height = 9, units = "in", dpi = 300)
   
   my_list <- list(df = df,"logistic" = log_curve, "runCDF" = runCDF)
   return(my_list) 
 }
+
 
 graph_year <- function(df){
   #Graph daily weir run = escapement + catch for a year ----
