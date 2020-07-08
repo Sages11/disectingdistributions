@@ -111,8 +111,9 @@ year_stats <- function (df, year_wanted){
   
   min(df$day_of_year, na.rm = TRUE)
   
-  # this is for simultaneous graphing. 
   
+  
+  # this "long" data set needed for simultaneous graphing of both methods
   df_long <- df %>%
     gather(model_type, proportions, dist_percent, prop_early_genetics)
   length(df_long$proportions)
@@ -121,16 +122,54 @@ year_stats <- function (df, year_wanted){
 
   #ecdf.ksCI(df$dist_percent)
   
-  ggplot(df, aes(day_of_year, prop_early_genetics)) +
-    geom_point(size=2) + theme_light()
+  #this is to plot vertical lines in plots 
+  jun1 <- as.integer(yday(as.Date(paste0(year_wanted, "-06-01"))))
+  jul1 <- as.integer(yday(as.Date(paste0(year_wanted, "-07-01"))))
+  aug1 <- as.integer(yday(as.Date(paste0(year_wanted, "-08-01"))))
+  d <- data.frame(day_of_year = c(jun1, jul1, aug1), 
+                  event = c("June 1", "July 1", "August 1"),
+                  ltype = c("dotted","dotdash","dotted"))
   
+  #Plot just early proportions determined with genetics (not saved)
+  ggplot(df, aes(day_of_year, prop_early_genetics)) +
+    geom_point(size=2) + theme_light() +
+    geom_vline(data = d, mapping = aes(xintercept = day_of_year, linetype = ltype), show.legend = FALSE) +
+    geom_text(data=d, mapping=aes(x=day_of_year, y=0, label= event), size=4, angle=90, vjust= -0.4, hjust = -0.5) +
+    scale_shape_manual(name = "Modeled by",
+                       labels = c("Run Timing", "Genetics"), 
+                       values = c(19, 17)) +
+    theme(plot.title = element_text(vjust = -8, hjust = 0.05), legend.justification = c(.5,0), legend.position = "bottom") +
+    labs(y = "Proportion of early sockeye determined with genetics", x= "Day of the year") +
+    coord_cartesian(xlim = c(150, 220))
+  
+  #Plot just early proportions determined with run timing (not saved)
   ggplot(df, aes(day_of_year, dist_percent)) +
-    geom_point(size=2) + theme_light()
+    geom_point(size=2) + theme_light() +
+    geom_vline(data = d, mapping = aes(xintercept = day_of_year, linetype = ltype), show.legend = FALSE) +
+    geom_text(data=d, mapping=aes(x=day_of_year, y=0, label= event), size=4, angle=90, vjust= -0.4, hjust = -0.5) +
+    scale_shape_manual(name = "Modeled by",
+                       labels = c("Run Timing", "Genetics"), 
+                       values = c(19, 17)) +
+    theme(plot.title = element_text(vjust = -8, hjust = 0.05), legend.justification = c(.5,0), legend.position = "bottom") +
+    labs(y = "Proportion of early sockeye determined with run timing", x= "Day of the year") +
+    coord_cartesian(xlim = c(150, 220))
   dev.off()
   
+  #Plot just early proportions both methods (saved)
   long_curve <- ggplot(df_long, aes(x = day_of_year, y = proportions), color = model_type) +
-    geom_point(aes(pch = model_type)) + theme_light() +
-    theme(legend.justification = c(.5,0), legend.position = "bottom")
+    geom_point(aes(pch = model_type)) +
+    ggtitle(label = paste0(year_wanted, " Proportions of Early Run")) +
+    theme_light() +
+    theme(legend.justification = c(.5,0), legend.position = "bottom") +
+    geom_vline(data = d, mapping = aes(xintercept = day_of_year, linetype = ltype), show.legend = FALSE) +
+    geom_text(data=d, mapping=aes(x=day_of_year, y=0, label= event), size=6, angle=90, vjust= -0.4, hjust = -0.5) +
+    scale_shape_manual(name = "Modeled by",
+                       labels = c("Run Timing", "Genetics"), 
+                       values = c(19, 17)) +
+    theme(text = element_text(size =16), plot.title = element_text(vjust = -8, hjust = 1, size = 20), legend.justification = c(.5,0), legend.position = "bottom") +
+    labs(y = "Proportion of early sockeye run", x= "Day of the year") +
+    coord_cartesian(xlim = c(150, 220))
+  long_curve
   ggsave(filename = paste0("figures/long_curv", year_wanted, ".png", sep = ""), device = png(), width = 7, height = 9, units = "in", dpi = 300)
   
   dev.off()
@@ -149,27 +188,22 @@ year_stats <- function (df, year_wanted){
   #print(max(df$cum_run_dis)/max(df$cum_run_gen))
   #xaxis <- tickr(df, day_of_year, 5)
   
+  #For ploting the cumulative run via both methods 
   df_long_cum <- df %>%
     gather(model_type, cumulative_run, cum_run_dis, cum_run_gen)
   length(df_long_cum$cumulative_run)
   
-  jun1 <- as.integer(yday(as.Date(paste0(year_wanted, "-06-01"))))
-  jul1 <- as.integer(yday(as.Date(paste0(year_wanted, "-07-01"))))
-  aug1 <- as.integer(yday(as.Date(paste0(year_wanted, "-08-01"))))
-  d <- data.frame(day_of_year = c(jun1, jul1, aug1), 
-                  event = c("June 1", "July 1", "August 1"))
-
-  
+  #Plot of cumulative nun via both methods
   long_curve_cum <- ggplot(df_long_cum, aes(x = day_of_year, y = cumulative_run), color = model_type) +
     geom_point(aes(pch = model_type)) + 
     ggtitle(label = paste0(year_wanted, " Early Run Estimation")) +
     theme_light() +
-    geom_vline(data = d, mapping = aes(xintercept = day_of_year, linetype = "dotted"), show.legend = FALSE) +
-    geom_text(data=d, mapping=aes(x=day_of_year, y=0, label= event), size=4, angle=90, vjust= -0.4, hjust = -0.5) +
+    geom_vline(data = d, mapping = aes(xintercept = day_of_year, linetype = ltype), show.legend = FALSE) +
+    geom_text(data=d, mapping=aes(x=day_of_year, y=0, label= event), size=5, angle=90, vjust=-0.4, hjust =-0.5) +
     scale_shape_manual(name = "Modeled by",
                         labels = c("Run Timing", "Genetics"), 
                         values = c(19, 17)) +
-    theme(plot.title = element_text(vjust = -8, hjust = 0.05), legend.justification = c(.5,0), legend.position = "bottom") +
+    theme(text = element_text(size =16), plot.title = element_text(vjust = -8, hjust = 0.05, size = 20), legend.justification = c(.5,0), legend.position = "bottom") +
     labs(y = "Cumulative run", x= "Day of the year") +
     coord_cartesian(xlim = c(150, 220))
   long_curve_cum 
