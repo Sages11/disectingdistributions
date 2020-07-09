@@ -75,8 +75,7 @@ df_data <- post_harvest(df_data)
 #Checking remove later
 sum(df_data$harvest_all)
 
-
-year_vector <- c(2006:2008,2010:2018)
+year_vector <- c(2006:2008,2010:2019)
 
 dgen <- read_csv('data/chig_genetics_by_weir_date.csv') %>%
   mutate(date = as.Date(paste(year, month, day, sep = '-')),
@@ -132,8 +131,8 @@ dev.off()
 dev.off()
 dev.off()
 
-fig <- cowplot::plot_grid(y06$runCDF, y07$runCDF, y08$runCDF, y10$runCDF, y11$runCDF, y12$runCDF, 
-                          y13$runCDF, y14$runCDF, y15$runCDF, y16$runCDF, y17$runCDF, y18$runCDF, y19$runCDF, ncol = 3)
+fig <- cowplot::plot_grid(y06$early_cum, y07$early_cum, y08$early_cum, y10$early_cum, y11$early_cum, y12$early_cum, 
+                          y13$early_cum, y14$early_cum, y15$early_cum, y16$early_cum, y17$early_cum, y18$early_cum, y19$early_cum, ncol = 3)
 fig
 dev.off()
 #add y labels to plot #https://stackoverflow.com/questions/33114380/centered-x-axis-label-for-muliplot-using-cowplot-package

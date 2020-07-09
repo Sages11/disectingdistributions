@@ -21,7 +21,9 @@ if(!require("zoo"))   install.packages("zoo")  # to convert numeric date back to
 citation("mixdist")
 #library(here)
 
+# display settings
 windowsFonts(Times=windowsFont("Times New Roman"))
+windowsFonts("helvetica" = windowsFont("helvetica"))
 options(scipen = 999)
 
 theme_sleek <- function(base_size = 12, base_family = "Times") {
@@ -42,6 +44,49 @@ theme_sleek <- function(base_size = 12, base_family = "Times") {
 }
 
 #theme_set(theme_sleek())
+
+theme_Publication <- function(base_size=14, base_family="helvetica") {
+  library(grid)
+  library(ggthemes)
+  (theme_foundation(base_size=base_size, base_family=base_family)
+    + theme(plot.title = element_text(face = "bold",
+                                      size = rel(1.2), hjust = 0.5),
+            text = element_text(),
+            panel.background = element_rect(colour = NA),
+            plot.background = element_rect(colour = NA),
+            panel.border = element_rect(colour = NA),
+            axis.title = element_text(face = "bold",size = rel(1)),
+            axis.title.y = element_text(angle=90,vjust =2),
+            axis.title.x = element_text(vjust = -0.2),
+            axis.text = element_text(), 
+            axis.line = element_line(colour="black"),
+            axis.ticks = element_line(),
+            panel.grid.major = element_line(colour="#f0f0f0"),
+            panel.grid.minor = element_blank(),
+            legend.key = element_rect(colour = NA),
+            legend.position = "bottom",
+            legend.direction = "horizontal",
+            legend.key.size= unit(0.2, "cm"),
+            legend.margin = margin(0, "cm"),
+            legend.title = element_text(face="italic"),
+            plot.margin=unit(c(10,5,5,5),"mm"),
+            strip.background=element_rect(colour="#f0f0f0",fill="#f0f0f0"),
+            strip.text = element_text(face="bold")
+    ))
+  
+}
+
+scale_fill_Publication <- function(...){
+  library(scales)
+  discrete_scale("fill","Publication",manual_pal(values = c("#386cb0","#fdb462","#7fc97f","#ef3b2c","#662506","#a6cee3","#fb9a99","#984ea3","#ffff33")), ...)
+  
+}
+
+scale_colour_Publication <- function(...){
+  library(scales)
+  discrete_scale("colour","Publication",manual_pal(values = c("#386cb0","#fdb462","#7fc97f","#ef3b2c","#662506","#a6cee3","#fb9a99","#984ea3","#ffff33")), ...)
+  
+}
 
 # functions ----
 
@@ -118,8 +163,7 @@ year_stats <- function (df, year_wanted){
     gather(model_type, proportions, dist_percent, prop_early_genetics)
   length(df_long$proportions)
 
-  ks.test(df$dist_percent, df$prop_early_genetics)
-
+  #ks.test(df$dist_percent, df$prop_early_genetics)
   #ecdf.ksCI(df$dist_percent)
   
   #this is to plot vertical lines in plots 
@@ -132,35 +176,40 @@ year_stats <- function (df, year_wanted){
   
   #Plot just early proportions determined with genetics (not saved)
   ggplot(df, aes(day_of_year, prop_early_genetics)) +
-    geom_point(size=2) + theme_light() +
+    geom_point(size=2) + 
+    ggtitle(label = paste0(year_wanted)) +
+    theme_Publication() +
     geom_vline(data = d, mapping = aes(xintercept = day_of_year, linetype = ltype), show.legend = FALSE) +
     geom_text(data=d, mapping=aes(x=day_of_year, y=0, label= event), size=4, angle=90, vjust= -0.4, hjust = -0.5) +
     scale_shape_manual(name = "Modeled by",
                        labels = c("Run Timing", "Genetics"), 
                        values = c(19, 17)) +
-    theme(plot.title = element_text(vjust = -8, hjust = 0.05), legend.justification = c(.5,0), legend.position = "bottom") +
+    theme(plot.title = element_text(vjust = -8, hjust = 1), legend.justification = c(.5,0), legend.position = "bottom") +
     labs(y = "Proportion of early sockeye determined with genetics", x= "Day of the year") +
     coord_cartesian(xlim = c(150, 220))
+  dev.off()
   
   #Plot just early proportions determined with run timing (not saved)
   ggplot(df, aes(day_of_year, dist_percent)) +
-    geom_point(size=2) + theme_light() +
+    geom_point(size=2) + 
+    ggtitle(label = paste0(year_wanted)) +
+    theme_Publication() +
     geom_vline(data = d, mapping = aes(xintercept = day_of_year, linetype = ltype), show.legend = FALSE) +
     geom_text(data=d, mapping=aes(x=day_of_year, y=0, label= event), size=4, angle=90, vjust= -0.4, hjust = -0.5) +
     scale_shape_manual(name = "Modeled by",
                        labels = c("Run Timing", "Genetics"), 
                        values = c(19, 17)) +
-    theme(plot.title = element_text(vjust = -8, hjust = 0.05), legend.justification = c(.5,0), legend.position = "bottom") +
+    theme(plot.title = element_text(vjust = -8, hjust = 1), legend.justification = c(.5,0), legend.position = "bottom") +
     labs(y = "Proportion of early sockeye determined with run timing", x= "Day of the year") +
     coord_cartesian(xlim = c(150, 220))
   dev.off()
   
   #Plot just early proportions both methods (saved)
-  long_curve <- ggplot(df_long, aes(x = day_of_year, y = proportions), color = model_type) +
+  early_prop <- ggplot(df_long, aes(x = day_of_year, y = proportions), color = model_type) +
     geom_point(aes(pch = model_type)) +
     ggtitle(label = paste0(year_wanted, " Proportions of Early Run")) +
-    theme_light() +
-    theme(legend.justification = c(.5,0), legend.position = "bottom") +
+    theme_Publication() +
+    #theme(legend.justification = c(.5,0), legend.position = "bottom") +
     geom_vline(data = d, mapping = aes(xintercept = day_of_year, linetype = ltype), show.legend = FALSE) +
     geom_text(data=d, mapping=aes(x=day_of_year, y=0, label= event), size=6, angle=90, vjust= -0.4, hjust = -0.5) +
     scale_shape_manual(name = "Modeled by",
@@ -169,8 +218,8 @@ year_stats <- function (df, year_wanted){
     theme(text = element_text(size =16), plot.title = element_text(vjust = -8, hjust = 1, size = 20), legend.justification = c(.5,0), legend.position = "bottom") +
     labs(y = "Proportion of early sockeye run", x= "Day of the year") +
     coord_cartesian(xlim = c(150, 220))
-  long_curve
-  ggsave(filename = paste0("figures/long_curv", year_wanted, ".png", sep = ""), device = png(), width = 7, height = 9, units = "in", dpi = 300)
+  early_prop
+  ggsave(filename = paste0("figures/early_prop", year_wanted, ".png", sep = ""), device = png(), width = 7, height = 9, units = "in", dpi = 300)
   
   dev.off()
   #df %>%
@@ -194,10 +243,10 @@ year_stats <- function (df, year_wanted){
   length(df_long_cum$cumulative_run)
   
   #Plot of cumulative nun via both methods
-  long_curve_cum <- ggplot(df_long_cum, aes(x = day_of_year, y = cumulative_run), color = model_type) +
+  early_cum <- ggplot(df_long_cum, aes(x = day_of_year, y = cumulative_run), color = model_type) +
     geom_point(aes(pch = model_type)) + 
     ggtitle(label = paste0(year_wanted, " Early Run Estimation")) +
-    theme_light() +
+    theme_Publication() +
     geom_vline(data = d, mapping = aes(xintercept = day_of_year, linetype = ltype), show.legend = FALSE) +
     geom_text(data=d, mapping=aes(x=day_of_year, y=0, label= event), size=5, angle=90, vjust=-0.4, hjust =-0.5) +
     scale_shape_manual(name = "Modeled by",
@@ -206,11 +255,11 @@ year_stats <- function (df, year_wanted){
     theme(text = element_text(size =16), plot.title = element_text(vjust = -8, hjust = 0.05, size = 20), legend.justification = c(.5,0), legend.position = "bottom") +
     labs(y = "Cumulative run", x= "Day of the year") +
     coord_cartesian(xlim = c(150, 220))
-  long_curve_cum 
+  early_cum
   dev.off()
-  ggsave(filename = paste0("figures/long_curve_cum", year_wanted, ".png", sep = ""), device = png(), width = 7, height = 9, units = "in", dpi = 300)
+  ggsave(filename = paste0("figures/early_cum", year_wanted, ".png", sep = ""), device = png(), width = 7, height = 9, units = "in", dpi = 300)
   
-  my_list <- list(df = df,"logistic" = log_curve, "runCDF" = runCDF)
+  my_list <- list(df = df,"early_prop" = early_prop, "cum" = early_cum)
   return(my_list) 
 }
 
