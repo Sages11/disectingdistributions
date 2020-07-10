@@ -44,15 +44,16 @@ h_name = "h_to_272_20"
 h_name = "h_to_272_30"
 #df_data <- outercb <- datayear %>% mutate(harvest = area_27110 + area_27220 + area_27230 + area_27240)
 h_name = "h_to_272_40_OuterCB"
-
 # df_data <- all_h <- datayear %>% mutate(harvest = datayear %>% select(area_27110:area_27560) %>% rowSums())
 h_name = "h_all"
 # df_data <- kujulik <- datayear %>% mutate(harvest = datayear %>% select(area_27110:area_27253) %>% rowSums())
 h_name = "h_to_272_53_kujulik"
 # df_data <- kumlik <- datayear %>% mutate(harvest = datayear %>% select(area_27110:area_27253, area_27262, area_27264) %>% rowSums())
 h_name = "h_to_272_64_kumlik"
-# df_data <- west_kuj <- datayear %>% mutate(harvest = datayear %>% select(area27210:area_53, area_27390:area_27395) %>% rowSums())
+# df_data <- west_kuj <- datayear %>% mutate(harvest = datayear %>% select(area_27110:area_27253, area_27390:area_27395) %>% rowSums())
 h_name = "h_west_to_kuj"
+# df_data <- castle_cape <- datayear %>% mutate(harvest = datayear %>% select(area_27110:area_27253, area_27390:area_27395) %>% rowSums())
+h_name = "castle_cape"
 
 #Checking remove later
 sum(df_data$harvest)
