@@ -44,37 +44,7 @@ theme_sleek <- function(base_size = 12, base_family = "Times") {
 }
 
 #theme_set(theme_sleek())
-
-theme_Publication <- function(base_size=14, base_family="helvetica") {
-  library(grid)
-  library(ggthemes)
-  (theme_foundation(base_size=base_size, base_family=base_family)
-    + theme(plot.title = element_text(face = "bold",
-                                      size = rel(1.2), hjust = 0.5),
-            text = element_text(),
-            panel.background = element_rect(colour = NA),
-            plot.background = element_rect(colour = NA),
-            panel.border = element_rect(colour = NA),
-            axis.title = element_text(face = "bold",size = rel(1)),
-            axis.title.y = element_text(angle=90,vjust =2),
-            axis.title.x = element_text(vjust = -0.2),
-            axis.text = element_text(), 
-            axis.line = element_line(colour="black"),
-            axis.ticks = element_line(),
-            panel.grid.major = element_line(colour="#f0f0f0"),
-            panel.grid.minor = element_blank(),
-            legend.key = element_rect(colour = NA),
-            legend.position = "bottom",
-            legend.direction = "horizontal",
-            legend.key.size= unit(0.2, "cm"),
-            legend.margin = margin(0, "cm"),
-            legend.title = element_text(face="italic"),
-            plot.margin=unit(c(10,5,5,5),"mm"),
-            strip.background=element_rect(colour="#f0f0f0",fill="#f0f0f0"),
-            strip.text = element_text(face="bold")
-    ))
-  
-}
+#theme_set(theme_cowplot())
 
 scale_fill_Publication <- function(...){
   library(scales)
@@ -115,7 +85,7 @@ data_prep_early <- function(df, year_wanted){
 #output graphs and tables comparing two methods for each year
 year_stats <- function (df, year_wanted){
   #df <- df_data
-  #year_wanted <- 2006
+  #year_wanted <- 2007
   df %>%
     filter(year(date)==year_wanted)-> df
   #run_size <-sum(df$run)
@@ -178,7 +148,6 @@ year_stats <- function (df, year_wanted){
   ggplot(df, aes(day_of_year, prop_early_genetics)) +
     geom_point(size=2) + 
     ggtitle(label = paste0(year_wanted)) +
-    theme_Publication() +
     geom_vline(data = d, mapping = aes(xintercept = day_of_year, linetype = ltype), show.legend = FALSE) +
     geom_text(data=d, mapping=aes(x=day_of_year, y=0, label= event), size=4, angle=90, vjust= -0.4, hjust = -0.5) +
     scale_shape_manual(name = "Modeled by",
@@ -187,13 +156,12 @@ year_stats <- function (df, year_wanted){
     theme(plot.title = element_text(vjust = -8, hjust = 1), legend.justification = c(.5,0), legend.position = "bottom") +
     labs(y = "Proportion of early sockeye determined with genetics", x= "Day of the year") +
     coord_cartesian(xlim = c(150, 220))
-  dev.off()
+  #dev.off()
   
   #Plot just early proportions determined with run timing (not saved)
   ggplot(df, aes(day_of_year, dist_percent)) +
     geom_point(size=2) + 
     ggtitle(label = paste0(year_wanted)) +
-    theme_Publication() +
     geom_vline(data = d, mapping = aes(xintercept = day_of_year, linetype = ltype), show.legend = FALSE) +
     geom_text(data=d, mapping=aes(x=day_of_year, y=0, label= event), size=4, angle=90, vjust= -0.4, hjust = -0.5) +
     scale_shape_manual(name = "Modeled by",
@@ -202,13 +170,13 @@ year_stats <- function (df, year_wanted){
     theme(plot.title = element_text(vjust = -8, hjust = 1), legend.justification = c(.5,0), legend.position = "bottom") +
     labs(y = "Proportion of early sockeye determined with run timing", x= "Day of the year") +
     coord_cartesian(xlim = c(150, 220))
-  dev.off()
+  #dev.off()
   
   #Plot just early proportions both methods (saved)
   early_prop <- ggplot(df_long, aes(x = day_of_year, y = proportions), color = model_type) +
     geom_point(aes(pch = model_type)) +
     ggtitle(label = paste0(year_wanted, " Proportions of Early Run")) +
-    theme_Publication() +
+    #theme_Publication() +
     #theme(legend.justification = c(.5,0), legend.position = "bottom") +
     geom_vline(data = d, mapping = aes(xintercept = day_of_year, linetype = ltype), show.legend = FALSE) +
     geom_text(data=d, mapping=aes(x=day_of_year, y=0, label= event), size=6, angle=90, vjust= -0.4, hjust = -0.5) +
@@ -218,10 +186,12 @@ year_stats <- function (df, year_wanted){
     theme(text = element_text(size =16), plot.title = element_text(vjust = -8, hjust = 1, size = 20), legend.justification = c(.5,0), legend.position = "bottom") +
     labs(y = "Proportion of early sockeye run", x= "Day of the year") +
     coord_cartesian(xlim = c(150, 220))
-  early_prop
+  #early_prop
   ggsave(filename = paste0("figures/early_prop", year_wanted, ".png", sep = ""), device = png(), width = 7, height = 9, units = "in", dpi = 300)
+  save_plot(filename = paste0("figures/early_prop", year_wanted, ".png", sep = ""), early_prop, ncol = 1, nrow = 1, base_height =3.71, base_asp = 1.618)
   
-  dev.off()
+  #dev.off()
+
   #df %>%
   #  mutate(dist_percent = percent_dist(fit, df$day_of_year),
   #         run_early_dis = dist_percent*run,
@@ -246,7 +216,7 @@ year_stats <- function (df, year_wanted){
   early_cum <- ggplot(df_long_cum, aes(x = day_of_year, y = cumulative_run), color = model_type) +
     geom_point(aes(pch = model_type)) + 
     ggtitle(label = paste0(year_wanted, " Early Run Estimation")) +
-    theme_Publication() +
+    #theme_Publication() +
     geom_vline(data = d, mapping = aes(xintercept = day_of_year, linetype = ltype), show.legend = FALSE) +
     geom_text(data=d, mapping=aes(x=day_of_year, y=0, label= event), size=5, angle=90, vjust=-0.4, hjust =-0.5) +
     scale_shape_manual(name = "Modeled by",
@@ -255,11 +225,10 @@ year_stats <- function (df, year_wanted){
     theme(text = element_text(size =16), plot.title = element_text(vjust = -8, hjust = 0.05, size = 20), legend.justification = c(.5,0), legend.position = "bottom") +
     labs(y = "Cumulative run", x= "Day of the year") +
     coord_cartesian(xlim = c(150, 220))
-  early_cum
-  dev.off()
+  #early_cum
   ggsave(filename = paste0("figures/early_cum", year_wanted, ".png", sep = ""), device = png(), width = 7, height = 9, units = "in", dpi = 300)
   
-  my_list <- list(df = df,"early_prop" = early_prop, "cum" = early_cum)
+  my_list <- list(df = df,"early_prop" = early_prop, "early_cum" = early_cum)
   return(my_list) 
 }
 
