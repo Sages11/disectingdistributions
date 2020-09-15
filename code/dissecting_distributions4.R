@@ -4,14 +4,6 @@
 # 7/7/2020
 
 # load ----
-
-#library(tidyverse)
-#library(mixdist)
-#library(lubridate)
-#library(grid)
-#library(gridExtra)
-#library(cowplot)
-#library(zoo) # to convert numeric date back to a number can conflict with lubridate.
 source('code/distribution_functions4.R')
 
 # data ----
@@ -35,30 +27,30 @@ datayear[!complete.cases(datayear),]$date #print out lines of non complete data 
 
 # Defining harvest Change df_data to the one you want to run through.
 # df_data <- dfweironly <- datayear %>% mutate(harvest = 0)
-h_name = "h_none"
+#h_name = "h_none"
 # df_data <- datayear %>% mutate(harvest = area_27110)
-h_name = "h_to_272_10_lagoon"
+#h_name = "h_to_272_10_lagoon"
 # df_data <- df18ocdb_272_20 <- datayear %>% mutate(harvest = area_27110 + area_27220)
-h_name = "h_to_272_20"
+#h_name = "h_to_272_20"
 # df_data <- df18ocdb_272_30 <- datayear %>% mutate(harvest = area_27110 + area_27220 + area_27230)
-h_name = "h_to_272_30"
+#h_name = "h_to_272_30"
 #df_data <- outercb <- datayear %>% mutate(harvest = area_27110 + area_27220 + area_27230 + area_27240)
-h_name = "h_to_272_40_OuterCB"
+#h_name = "h_to_272_40_OuterCB"
 # df_data <- all_h <- datayear %>% mutate(harvest = datayear %>% select(area_27110:area_27560) %>% rowSums())
-h_name = "h_all"
+#h_name = "h_all"
 # df_data <- kujulik <- datayear %>% mutate(harvest = datayear %>% select(area_27110:area_27253) %>% rowSums())
-h_name = "h_to_272_53_kujulik"
+#h_name = "h_to_272_53_kujulik"
 # df_data <- kumlik <- datayear %>% mutate(harvest = datayear %>% select(area_27110:area_27253, area_27262, area_27264) %>% rowSums())
-h_name = "h_to_272_64_kumlik"
+#h_name = "h_to_272_64_kumlik"
 # df_data <- west_kuj <- datayear %>% mutate(harvest = datayear %>% select(area_27110:area_27253, area_27390:area_27395) %>% rowSums())
-h_name = "h_west_to_kuj"
+#h_name = "h_west_to_kuj"
 df_data <- miles_out45 <- datayear %>% mutate(harvest = datayear %>% select(
             area_27110, 
             area_27220, area_27230, area_27240, area_27251, area_27253, area_27262, area_27264,
             area_27390, area_27393, area_27395) %>% rowSums())
 h_name = "miles_out45"
 
-#So the stat areas I thought of looking at are
+#So the stat areas are
 
 #272-10	thru 272-40
 #272-51, 272-53, 272-62, 272-64
@@ -136,26 +128,29 @@ y17 <- year_stats(df_data, 2017)
 y18 <- year_stats(df_data, 2018)
 y19 <- year_stats(df_data, 2019)
 
-
+dev.off()
+dev.off()
+dev.off()
 dev.off()
 dev.off()
 dev.off()
 
 fig <- cowplot::plot_grid(y06$early_cum, y07$early_cum, y08$early_cum, y10$early_cum, y11$early_cum, y12$early_cum, 
                           y13$early_cum, y14$early_cum, y15$early_cum, y16$early_cum, y17$early_cum, y18$early_cum, y19$early_cum, ncol = 3)
-fig
+
+#multiplot(y06$early_cum, y07$early_cum, y08$early_cum, y10$early_cum, cols =2)
 dev.off()
 #add y labels to plot #https://stackoverflow.com/questions/33114380/centered-x-axis-label-for-muliplot-using-cowplot-package
 # y label
-# textGrob doesn't seem to be working
+# textGrob doesn't seem to be working when ggsave is used.
 y.grob <- textGrob(paste0("Count of early run sockeye using harvest ", h_name), gp=gpar(col="black", fontsize=15), rot=90)
 x.grob <- textGrob(paste0("Day of year "), gp=gpar(col="black", fontsize=15))
 fig <- grid.arrange(arrangeGrob(fig, left = y.grob, bottom = x.grob))
-ggsave(filename = paste0("figures/fig_year_stats_", h_name, ".png", sep = ""), device = png(), width = 7, height = 9, units = "in", dpi = 300)
+ggsave(filename = paste0("figures/fig_year_stats_", h_name, ".png", sep = ""), device = png(), width = 9, height = 16, units = "in", dpi = 300)
 
 #analysis ----
 
-#grab the values from y06$df that match those in dgen
+#grab the values from yYY$df that match those in dgen
 
 m <- rbind(y06$df, y07$df, y08$df, y10$df, y11$df, y12$df, y13$df, y14$df, y15$df, y16$df, y17$df, y18$df, y19$df) %>%
   dplyr::select(date, year, day_of_year, dist_percent, prop_early_genetics, run_early_dis_all, run_early_gen_all, run_all, cum_run_all, 

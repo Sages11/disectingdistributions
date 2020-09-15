@@ -17,6 +17,8 @@ if(!require("lubridate"))   install.packages("lubridate")
 if(!require("gridExtra"))   install.packages("gridExtra") 
 if(!require("cowplot"))   install.packages("cowplot") 
 if(!require("zoo"))   install.packages("zoo")  # to convert numeric date back to a number can conflict with lubridate.
+if(!require("ggthemes"))   install.packages("ggthemes")  
+if(!require("extrafont"))   install.packages("extrafont")  
 
 citation("mixdist")
 #library(here)
@@ -24,6 +26,10 @@ citation("mixdist")
 # display settings
 windowsFonts(Times=windowsFont("Times New Roman"))
 windowsFonts("helvetica" = windowsFont("helvetica"))
+windowsFonts()
+#font_import()  # do these once then comment out
+#loadfonts(device = "win")
+
 options(scipen = 999)
 
 theme_sleek <- function(base_size = 12, base_family = "Times") {
@@ -43,6 +49,7 @@ theme_sleek <- function(base_size = 12, base_family = "Times") {
     )
 }
 
+
 #theme_set(theme_sleek())
 #theme_set(theme_cowplot())
 
@@ -55,6 +62,34 @@ scale_fill_Publication <- function(...){
 scale_colour_Publication <- function(...){
   library(scales)
   discrete_scale("colour","Publication",manual_pal(values = c("#386cb0","#fdb462","#7fc97f","#ef3b2c","#662506","#a6cee3","#fb9a99","#984ea3","#ffff33")), ...)
+  
+}
+theme_Publication <- function(base_size=14, base_family="Helvetica") {
+  (ggthemes::theme_foundation(base_size=base_size, base_family=base_family)
+   + ggplot2::theme(plot.title = ggplot2::element_text(face = "bold",
+                                                       size = ggplot2::rel(1.2), hjust = 0.5),
+                    text = ggplot2::element_text(),
+                    panel.background = ggplot2::element_rect(colour = NA),
+                    plot.background = ggplot2::element_rect(colour = NA),
+                    panel.border = ggplot2::element_rect(colour = NA),
+                    axis.title = ggplot2::element_text(face = "bold",size = ggplot2::rel(1)),
+                    axis.title.y = ggplot2::element_text(angle=90,vjust =2),
+                    axis.title.x = ggplot2::element_text(vjust = -0.2),
+                    axis.text = ggplot2::element_text(),
+                    axis.line = ggplot2::element_line(colour="black"),
+                    axis.ticks = ggplot2::element_line(),
+                    panel.grid.major = ggplot2::element_line(colour="#f0f0f0"),
+                    panel.grid.minor = ggplot2::element_blank(),
+                    legend.key = ggplot2::element_rect(colour = NA),
+                    legend.position = "bottom",
+                    legend.direction = "horizontal",
+                    legend.key.size= ggplot2::unit(0.2, "cm"),
+                    legend.spacing = ggplot2::unit(0, "cm"),
+                    legend.title = ggplot2::element_text(face="italic"),
+                    plot.margin=ggplot2::unit(c(10,5,5,5),"mm"),
+                    strip.background=ggplot2::element_rect(colour="#f0f0f0",fill="#f0f0f0"),
+                    strip.text = ggplot2::element_text(face="bold")
+   ))
   
 }
 
@@ -170,14 +205,14 @@ year_stats <- function (df, year_wanted){
     theme(plot.title = element_text(vjust = -8, hjust = 1), legend.justification = c(.5,0), legend.position = "bottom") +
     labs(y = "Proportion of early sockeye determined with run timing", x= "Day of the year") +
     coord_cartesian(xlim = c(150, 220))
-  #dev.off()
+  dev.off()
   
   #Plot just early proportions both methods (saved)
   early_prop <- ggplot(df_long, aes(x = day_of_year, y = proportions), color = model_type) +
     geom_point(aes(pch = model_type)) +
     ggtitle(label = paste0(year_wanted, " Proportions of Early Run")) +
-    #theme_Publication() +
-    #theme(legend.justification = c(.5,0), legend.position = "bottom") +
+    theme_Publication() +
+    theme(legend.justification = c(.5,0), legend.position = "bottom") +
     geom_vline(data = d, mapping = aes(xintercept = day_of_year, linetype = ltype), show.legend = FALSE) +
     geom_text(data=d, mapping=aes(x=day_of_year, y=0, label= event), size=6, angle=90, vjust= -0.4, hjust = -0.5) +
     scale_shape_manual(name = "Modeled by",
@@ -189,8 +224,8 @@ year_stats <- function (df, year_wanted){
   #early_prop
   ggsave(filename = paste0("figures/early_prop", year_wanted, ".png", sep = ""), device = png(), width = 7, height = 9, units = "in", dpi = 300)
   save_plot(filename = paste0("figures/early_prop", year_wanted, ".png", sep = ""), early_prop, ncol = 1, nrow = 1, base_height =3.71, base_asp = 1.618)
+  dev.off()
   
-  #dev.off()
 
   #df %>%
   #  mutate(dist_percent = percent_dist(fit, df$day_of_year),
@@ -215,17 +250,23 @@ year_stats <- function (df, year_wanted){
   #Plot of cumulative nun via both methods
   early_cum <- ggplot(df_long_cum, aes(x = day_of_year, y = cumulative_run), color = model_type) +
     geom_point(aes(pch = model_type)) + 
-    ggtitle(label = paste0(year_wanted, " Early Run Estimation")) +
-    #theme_Publication() +
+    ggtitle(label = paste0(year_wanted)) + #, " Early Run Estimation")) +
+    theme_Publication() +
     geom_vline(data = d, mapping = aes(xintercept = day_of_year, linetype = ltype), show.legend = FALSE) +
     geom_text(data=d, mapping=aes(x=day_of_year, y=0, label= event), size=5, angle=90, vjust=-0.4, hjust =-0.5) +
-    scale_shape_manual(name = "Modeled by",
-                        labels = c("Run Timing", "Genetics"), 
-                        values = c(19, 17)) +
-    theme(text = element_text(size =16), plot.title = element_text(vjust = -8, hjust = 0.05, size = 20), legend.justification = c(.5,0), legend.position = "bottom") +
-    labs(y = "Cumulative run", x= "Day of the year") +
-    coord_cartesian(xlim = c(150, 220))
-  #early_cum
+    #scale_shape_manual(name = "Modeled by",
+    #                    labels = c("Run Timing", "Genetics"), 
+    #                    values = c(19, 17)) +
+    #theme(text = element_text(size =16), plot.title = element_text(vjust = -8, hjust = 0.05, size = 20), legend.justification = c(.5,0), legend.position = "bottom") +
+    #labs(y = "Cumulative run", x= "Day of the year") +
+    coord_cartesian(xlim = c(150, 220))+
+    theme(legend.position = "none",
+          plot.title = element_text(vjust = -8, hjust = 0.05, size = 20),
+          #panel.grid = element_blank(),
+          axis.title = element_blank(),
+          #axis.text.y = element_blank()
+          )
+  early_cum
   ggsave(filename = paste0("figures/early_cum", year_wanted, ".png", sep = ""), device = png(), width = 7, height = 9, units = "in", dpi = 300)
   
   my_list <- list(df = df,"early_prop" = early_prop, "early_cum" = early_cum)
