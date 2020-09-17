@@ -139,14 +139,29 @@ fig <- cowplot::plot_grid(y06$early_cum, y07$early_cum, y08$early_cum, y10$early
                           y13$early_cum, y14$early_cum, y15$early_cum, y16$early_cum, y17$early_cum, y18$early_cum, y19$early_cum, ncol = 3)
 
 #multiplot(y06$early_cum, y07$early_cum, y08$early_cum, y10$early_cum, cols =2)
+
 dev.off()
-#add y labels to plot #https://stackoverflow.com/questions/33114380/centered-x-axis-label-for-muliplot-using-cowplot-package
-# y label
-# textGrob doesn't seem to be working when ggsave is used.
+#Resources for grobs (graphical objects) 
+#https://stackoverflow.com/questions/33114380/centered-x-axis-label-for-muliplot-using-cowplot-package
+#https://stackoverflow.com/questions/17059099/saving-grid-arrange-plot-to-file
+#http://www.sthda.com/english/wiki/wiki.php?id_contents=7930
+
 y.grob <- textGrob(paste0("Count of early run sockeye using harvest ", h_name), gp=gpar(col="black", fontsize=15), rot=90)
-x.grob <- textGrob(paste0("Day of year "), gp=gpar(col="black", fontsize=15))
+x.grob <- textGrob("Day of year", gp=gpar(col="black", fontsize=15))
 fig <- grid.arrange(arrangeGrob(fig, left = y.grob, bottom = x.grob))
-ggsave(filename = paste0("figures/fig_year_stats_", h_name, ".png", sep = ""), device = png(), width = 9, height = 16, units = "in", dpi = 300)
+ggsave(filename = paste0("figures/fig_year_stats_", h_name, ".png", sep = ""), device = png(), width = 9, height = 16, units = "in", dpi = 300, fig)
+
+
+fig6 <- cowplot::plot_grid(y15$early_cum, y18$early_cum, ncol = 1)
+#leg.grob <- legendGrob(c("Run Timing", "Genetics"), pch = c(19, 17), gp=gpar(col = 2:3, fill = "gray"))
+y.grob <- textGrob(paste0("Cumulative count of early run sockeye"), gp=gpar(col="black", fontsize=15), rot=90)
+x.grob <- textGrob(paste0("Day of year"), gp=gpar(col="black", fontsize=15))
+fig6 <- grid.arrange(arrangeGrob(fig6, left = y.grob, bottom = x.grob))
+ggsave(filename = paste0("figures/fig_6_15_18", h_name, ".png", sep = ""), device = png(), width = 4, height = 6, units = "in", dpi = 300, fig6)
+
+
+
+
 
 #analysis ----
 
@@ -167,19 +182,22 @@ p_of_run_by_year_ <- m %>%
             diff = dis_p - gen_p)
 write.csv(p_of_run_by_year_, file = paste0("figures/p_of_run_by_year_", h_name, ".csv", sep = ""))
 
+
 m1 <- m %>%
   rename(genetics = cum_run_gen_all, runtiming = cum_run_dis_all) %>% 
   gather(key = "method", value = "cum_fish", runtiming, genetics)%>% 
   ggplot(aes(day_of_year, cum_fish, group = method)) +
   geom_line(aes(linetype = method), size = 1) +
   scale_linetype_manual(values=c("dashed", "solid")) +
+  geom_vline(data = d, mapping = aes(xintercept = day_of_year, linetype = ltype), show.legend = FALSE) +
+  geom_text(data=d, mapping=aes(x=day_of_year, y=0, label= event), size=4, angle=90, vjust= -0.4, hjust = -0.5) +
   theme_bw() +
   facet_wrap(~year, ncol = 3) +
   theme(legend.position = "bottom") +
-  xlab(paste0("harvest = ", h_name))
+  labs(y = "Cumulative run", x= "Day of the year")
 m1
 
-ggsave(filename = paste0("figures/cum_early_run", h_name, ".png", sep = ""), device = png(), width = 6, height = 9, units = "in", dpi = 300)
+ggsave(filename = paste0("figures/cum_early_run ", h_name, ".png", sep = ""), device = png(), width = 6, height = 9, units = "in", dpi = 300, m1)
 
 
 

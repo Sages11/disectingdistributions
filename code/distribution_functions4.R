@@ -210,7 +210,7 @@ year_stats <- function (df, year_wanted){
   #Plot just early proportions both methods (saved)
   early_prop <- ggplot(df_long, aes(x = day_of_year, y = proportions), color = model_type) +
     geom_point(aes(pch = model_type)) +
-    ggtitle(label = paste0(year_wanted, " Proportions of Early Run")) +
+    ggtitle(label = paste0(year_wanted, " Early Run")) +
     theme_Publication() +
     theme(legend.justification = c(.5,0), legend.position = "bottom") +
     geom_vline(data = d, mapping = aes(xintercept = day_of_year, linetype = ltype), show.legend = FALSE) +
@@ -219,7 +219,7 @@ year_stats <- function (df, year_wanted){
                        labels = c("Run Timing", "Genetics"), 
                        values = c(19, 17)) +
     theme(text = element_text(size =16), plot.title = element_text(vjust = -8, hjust = 1, size = 20), legend.justification = c(.5,0), legend.position = "bottom") +
-    labs(y = "Proportion of early sockeye run", x= "Day of the year") +
+    labs(y = "Proportion of early run", x= "Day of the year") +
     coord_cartesian(xlim = c(150, 220))
   #early_prop
   ggsave(filename = paste0("figures/early_prop", year_wanted, ".png", sep = ""), device = png(), width = 7, height = 9, units = "in", dpi = 300)
@@ -255,16 +255,16 @@ year_stats <- function (df, year_wanted){
     geom_vline(data = d, mapping = aes(xintercept = day_of_year, linetype = ltype), show.legend = FALSE) +
     geom_text(data=d, mapping=aes(x=day_of_year, y=0, label= event), size=5, angle=90, vjust=-0.4, hjust =-0.5) +
     #scale_shape_manual(name = "Modeled by",
-    #                    labels = c("Run Timing", "Genetics"), 
-    #                    values = c(19, 17)) +
-    #theme(text = element_text(size =16), plot.title = element_text(vjust = -8, hjust = 0.05, size = 20), legend.justification = c(.5,0), legend.position = "bottom") +
-    #labs(y = "Cumulative run", x= "Day of the year") +
-    coord_cartesian(xlim = c(150, 220))+
-    theme(legend.position = "none",
-          plot.title = element_text(vjust = -8, hjust = 0.05, size = 20),
+     #                   labels = c("Run Timing", "Genetics"), # (circles, triangles)
+      #                  values = c(19, 17)) +
+    theme(text = element_text(size =16), plot.title = element_text(vjust = -8, hjust = 0.05, size = 20), legend.justification = c(.5,0), legend.position = "bottom") +
+    labs(y = "Cumulative run", x= "Day of the year") +
+    coord_cartesian(xlim = c(150, 220)) +
+    theme(legend.position = "none", #takes out legend
+          plot.title = element_text(vjust = -8, hjust = 0.05, size = 20), #puts the year inside the plot
           #panel.grid = element_blank(),
-          axis.title = element_blank(),
-          #axis.text.y = element_blank()
+          axis.title.x = element_blank(),
+          axis.title.y = element_blank()
           )
   early_cum
   ggsave(filename = paste0("figures/early_cum", year_wanted, ".png", sep = ""), device = png(), width = 7, height = 9, units = "in", dpi = 300)
@@ -272,6 +272,7 @@ year_stats <- function (df, year_wanted){
   my_list <- list(df = df,"early_prop" = early_prop, "early_cum" = early_cum)
   return(my_list) 
 }
+
 
 
 graph_year <- function(df){
